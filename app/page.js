@@ -4,10 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 
 const PAGE_SIZE = 24;
 
-function pick(obj, key, fallback = '') {
-  return obj?.[key] || fallback;
-}
-
 function unique(data, key) {
   return Array.from(new Set(data.map((row) => row[key] || '').filter(Boolean))).sort();
 }
@@ -96,8 +92,37 @@ function Select({ label, value, onChange, options }) {
   );
 }
 
+function StrategySection({ strategy }) {
+  if (!strategy) return null;
+  const highlights = strategy.highlights || [];
+  return (
+    <section className="strategy-section" id="strategy-paper">
+      <div className="strategy-main">
+        <p className="eyebrow">Strategy paper</p>
+        <h2>{strategy.title}</h2>
+        <p className="strategy-subtitle">{strategy.subtitle}</p>
+        <p className="muted">{strategy.summary}</p>
+        <div className="hero-actions compact-actions">
+          <a href={strategy.downloads?.docx}>Download Word paper</a>
+          <a href={strategy.downloads?.pdf}>Download PDF paper</a>
+          <a href="#rag">Ask the strategy with RAG</a>
+        </div>
+      </div>
+      <div className="strategy-grid">
+        {highlights.slice(0, 6).map((item) => (
+          <article className="strategy-card" key={item.id}>
+            <span className="id">{item.id}</span>
+            <h3>{item.title}</h3>
+            <p>{String(item.text || '').replace(/\|/g, ' ').slice(0, 260)}…</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function RagPanel() {
-  const [query, setQuery] = useState('Show high-value AI use cases for FIAR audit readiness and FBWT reconciliation.');
+  const [query, setQuery] = useState('Show high-value AI use cases and strategy actions for FIAR audit readiness, WCF audit by September 2027, and department-wide audit by December 31, 2028.');
   const [loading, setLoading] = useState(false);
   const [answer, setAnswer] = useState(null);
 
@@ -120,8 +145,8 @@ function RagPanel() {
     <section className="rag-panel" id="rag">
       <div>
         <p className="eyebrow">RAG backend</p>
-        <h2>Ask the catalog</h2>
-        <p className="muted">Without Neon/OpenAI environment variables, this route falls back to deterministic keyword retrieval. After loading Neon embeddings, it uses pgvector retrieval and an LLM-generated answer.</p>
+        <h2>Ask the catalog and strategy paper</h2>
+        <p className="muted">Without Neon/OpenAI environment variables, this route falls back to deterministic keyword retrieval. After loading Neon embeddings, it retrieves from both the use-case catalog and the DoD FM AI Integration Strategy Paper.</p>
       </div>
       <textarea value={query} onChange={(e) => setQuery(e.target.value)} />
       <button onClick={ask} disabled={loading}>{loading ? 'Searching…' : 'Ask catalog'}</button>
@@ -136,6 +161,12 @@ function RagPanel() {
                 <span>{r.missionArea} · {r.systemAssets}</span>
               </div>
             ))}
+            {(answer.strategyResults || []).slice(0, 3).map((r) => (
+              <div key={r.id} className="mini-card strategy-mini-card">
+                <strong>{r.id}: {r.title}</strong>
+                <span>{String(r.text || '').slice(0, 180)}…</span>
+              </div>
+            ))}
           </div>
         </div>
       ) : null}
@@ -145,12 +176,14 @@ function RagPanel() {
 
 export default function Home() {
   const [data, setData] = useState([]);
+  const [strategy, setStrategy] = useState(null);
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({ workbook: '', sector: '', missionArea: '', domain: '', evidenceType: '', priority: '', riskLevel: '' });
 
   useEffect(() => {
     fetch('/data/usecases.json').then((r) => r.json()).then(setData);
+    fetch('/data/strategy-paper.json').then((r) => r.json()).then(setStrategy);
   }, []);
 
   const filtered = useMemo(() => filterRows(data, filters, query), [data, filters, query]);
@@ -174,10 +207,11 @@ export default function Home() {
         <div className="hero-content">
           <p className="eyebrow">AI use-case intelligence library</p>
           <h1>DoD FM, federal, audit, accounting, and financial-industry AI use cases</h1>
-          <p className="hero-copy">A deployable Next.js library containing every row from both Excel workbooks, with searchable cards, source links, and a Neon/pgvector RAG backend path.</p>
+          <p className="hero-copy">A deployable Next.js library containing every row from both Excel workbooks, the DoD FM AI Integration Strategy Paper, searchable cards, source links, and a Neon/pgvector RAG backend path.</p>
           <div className="hero-actions">
             <a href="/downloads/dod_fm_ai_use_case_catalog.xlsx">Download DoD FM workbook</a>
             <a href="/downloads/ai_use_case_catalog_federal_audit_finance.xlsx">Download broad catalog workbook</a>
+            <a href="/downloads/DoD_FM_AI_Integration_Strategy_Paper.docx">Download strategy paper</a>
             <a href="#rag">Ask with RAG</a>
           </div>
         </div>
@@ -185,8 +219,11 @@ export default function Home() {
           <StatCard label="Total use cases" value={data.length || '1,891'} hint="Loaded from both workbooks" />
           <StatCard label="DoD FM use cases" value={dodCount || '1,341'} hint="Financial-management mission areas" />
           <StatCard label="Federal / audit / finance" value={broadCount || '550'} hint="Cross-sector source catalog" />
+          <StatCard label="Strategy chunks" value={strategy?.stats?.chunks || '25'} hint="Indexed for RAG search" />
         </div>
       </section>
+
+      <StrategySection strategy={strategy} />
 
       <section className="search-shell">
         <div className="search-header">
@@ -218,7 +255,7 @@ export default function Home() {
       <RagPanel />
 
       <footer>
-        <strong>Evidence note:</strong> the DoD FM workbook is a public-source-derived opportunity catalog, not an official complete list of deployed DoD AI systems. Keep the Evidence Type and Source Basis fields visible when briefing leadership.
+        <strong>Evidence note:</strong> the DoD FM workbook is a public-source-derived opportunity catalog, not an official complete list of deployed DoD AI systems. Keep the Evidence Type and Source Basis fields visible when briefing leadership. The strategy paper is included as a recommended integration strategy to connect selected use cases to audit outcomes.
       </footer>
     </main>
   );

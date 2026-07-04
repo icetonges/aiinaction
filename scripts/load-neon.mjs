@@ -5,6 +5,7 @@ import { neon } from '@neondatabase/serverless';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const data = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/data/usecases.json'), 'utf8'));
+const strategyPaper = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/data/strategy-paper.json'), 'utf8'));
 
 function toEmbeddingText(item) {
   return [
@@ -22,6 +23,15 @@ function toEmbeddingText(item) {
     `Controls: ${item.controls}`,
     `Evidence/source basis: ${item.evidenceType || item.sourceBasis}`,
     `Source: ${item.sourceName || item.sourceBasis} ${item.sourceUrl}`,
+  ].filter(Boolean).join('\n');
+}
+
+function toStrategyEmbeddingText(chunk) {
+  return [
+    `ID: ${chunk.id}`,
+    `Document: DoD FM AI Integration Strategy Paper`,
+    `Section: ${chunk.section || chunk.title}`,
+    `Text: ${chunk.text}`,
   ].filter(Boolean).join('\n');
 }
 
@@ -105,6 +115,35 @@ for (let i = 0; i < data.length; i += BATCH) {
         embedding = EXCLUDED.embedding;
     `;
   }
-  console.log(`Loaded ${Math.min(i + BATCH, data.length)} / ${data.length}`);
+  console.log(`Loaded use cases ${Math.min(i + BATCH, data.length)} / ${data.length}`);
 }
-console.log('All use cases loaded into Neon.');
+
+const chunks = strategyPaper.chunks || [];
+for (let i = 0; i < chunks.length; i += BATCH) {
+  const rows = chunks.slice(i, i + BATCH);
+  const texts = rows.map(toStrategyEmbeddingText);
+  const embeddings = await embedBatch(texts);
+  for (let j = 0; j < rows.length; j++) {
+    const r = rows[j];
+    const vector = `[${embeddings[j].join(',')}]`;
+    await sql`
+      INSERT INTO ai_strategy_chunks (
+        id, title, section, text, download_docx, download_pdf, text_for_embedding, metadata, embedding
+      ) VALUES (
+        ${r.id}, ${r.title}, ${r.section}, ${r.text}, ${r.downloadDocx}, ${r.downloadPdf}, ${texts[j]}, ${JSON.stringify({ sectionId: r.sectionId })}::jsonb, ${vector}::vector
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        title = EXCLUDED.title,
+        section = EXCLUDED.section,
+        text = EXCLUDED.text,
+        download_docx = EXCLUDED.download_docx,
+        download_pdf = EXCLUDED.download_pdf,
+        text_for_embedding = EXCLUDED.text_for_embedding,
+        metadata = EXCLUDED.metadata,
+        embedding = EXCLUDED.embedding;
+    `;
+  }
+  console.log(`Loaded strategy chunks ${Math.min(i + BATCH, chunks.length)} / ${chunks.length}`);
+}
+
+console.log('All use cases and strategy paper chunks loaded into Neon.');
