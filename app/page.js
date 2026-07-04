@@ -102,7 +102,7 @@ function PapersSection({ papersData }) {
           <p className="eyebrow">Strategy and adoption papers</p>
           <h2>Download and search the papers</h2>
         </div>
-        <p className="muted">Both papers are indexed for deterministic search and optional Neon/pgvector RAG retrieval.</p>
+        <p className="muted">All papers are indexed for deterministic search and optional Neon/pgvector RAG retrieval.</p>
       </div>
       <div className="papers-grid">
         {papers.map((paper) => (
@@ -159,7 +159,7 @@ function RagPanel() {
       <div>
         <p className="eyebrow">RAG backend</p>
         <h2>Ask the catalog and papers</h2>
-        <p className="muted">Without Neon/OpenAI environment variables, this route falls back to deterministic keyword retrieval. After loading Neon embeddings, it retrieves from the use-case catalog, the DoD FM strategy paper, and the general AI adoption paper.</p>
+        <p className="muted">Without Neon/OpenAI environment variables, this route falls back to deterministic keyword retrieval. After loading Neon embeddings, it retrieves from the use-case catalog and all indexed strategy, adoption, and architecture papers.</p>
       </div>
       <textarea value={query} onChange={(e) => setQuery(e.target.value)} />
       <button onClick={ask} disabled={loading}>{loading ? 'Searching…' : 'Ask catalog'}</button>
@@ -222,12 +222,14 @@ export default function Home() {
         <div className="hero-content">
           <p className="eyebrow">AI use-case intelligence library</p>
           <h1>DoD FM, federal, audit, accounting, and financial-industry AI use cases</h1>
-          <p className="hero-copy">A deployable Next.js library containing every row from both Excel workbooks, the DoD FM AI Integration Strategy Paper, the General AI Integration and Adoption Strategy Paper, searchable cards, source links, and a Neon/pgvector RAG backend path.</p>
+          <p className="hero-copy">A deployable Next.js library containing every row from both Excel workbooks plus strategy, adoption, and Advana-FM architecture papers, searchable cards, source links, and a Neon/pgvector RAG backend path.</p>
           <div className="hero-actions">
             <a href="/downloads/dod_fm_ai_use_case_catalog.xlsx">Download DoD FM workbook</a>
             <a href="/downloads/ai_use_case_catalog_federal_audit_finance.xlsx">Download broad catalog workbook</a>
             <a href="/downloads/DoD_FM_AI_Integration_Strategy_Paper.docx">DoD strategy paper</a>
             <a href="/downloads/General_AI_Integration_and_Adoption_Strategy_Paper.docx">General AI adoption paper</a>
+            <a href="/downloads/Advana_FM_AI_Integration_Architecture_Blueprint_Paper.docx">Advana-FM architecture paper</a>
+            <a href="#papers">All papers</a>
             <a href="#rag">Ask with RAG</a>
           </div>
         </div>

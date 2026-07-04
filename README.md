@@ -1,6 +1,6 @@
 # DoD FM AI Use Case Library
 
-This is a deployable **Next.js + CSS + JavaScript** website containing every use-case row from both Excel workbooks, plus two downloadable and RAG-searchable papers:
+This is a deployable **Next.js + CSS + JavaScript** website containing every use-case row from both Excel workbooks, plus four downloadable and RAG-searchable papers:
 
 1. **DoD FM AI Integration Strategy Paper**
 2. **General AI Integration and Adoption Strategy Paper**
@@ -12,7 +12,9 @@ This is a deployable **Next.js + CSS + JavaScript** website containing every use
 - Combined site data: **1,891** use-case rows
 - `DoD_FM_AI_Integration_Strategy_Paper.docx` and `.pdf` — added to `/public/downloads`
 - `General_AI_Integration_and_Adoption_Strategy_Paper.docx` and `.pdf` — added to `/public/downloads`
-- `papers.json` — both papers indexed into **49 chunks** for deterministic search and optional Neon/pgvector RAG retrieval
+- `AI_Practical_Adoption_Guidance_and_Best_Practices_Paper.docx` and `.pdf` — added to `/public/downloads`
+- `Advana_FM_AI_Integration_Architecture_Blueprint_Paper.docx` and `.pdf` — added to `/public/downloads`
+- `papers.json` — four papers indexed for deterministic search and optional Neon/pgvector RAG retrieval
 - Custom favicon and app icon assets in `app/favicon.ico`, `app/apple-icon.png`, `public/favicon.png`, and `public/favicon.svg`
 
 The app includes:
@@ -66,7 +68,7 @@ npm run init:neon
 npm run load:neon
 ```
 
-The schema uses pgvector with `vector(1536)` because the default embedding model is `text-embedding-3-small`. The `ai_strategy_chunks` table now stores both the DoD FM strategy paper and the general AI adoption paper.
+The schema uses pgvector with `vector(1536)` because the default embedding model is `text-embedding-3-small`. The `ai_strategy_chunks` table now stores the DoD FM strategy paper, the general AI adoption paper, the AI practical adoption guidance paper, and the Advana-FM architecture blueprint paper.
 
 ## What changed in this version
 
@@ -93,4 +95,9 @@ The General AI Integration and Adoption Strategy Paper is a companion paper. It 
 npm run check:data
 ```
 
-Expected output includes total row count of **1,891**, at least **2** indexed papers, no missing downloadable files, and no missing favicon/icon assets.
+Expected output includes total row count of **1,891**, at least **4** indexed papers, no missing downloadable files, and no missing favicon/icon assets.
+
+
+## Added Advana-FM architecture and practical adoption guidance
+
+This update adds the AI Practical Adoption Guidance and Best Practices Paper and the Advana-FM AI Integration Architecture Blueprint Paper. The Advana-FM paper reinforces the operating concept that Advana-FM is the technical accelerator for the audit goal and AI is a governed layer within Advana-FM for reconciliation, evidence generation, anomaly detection, control validation, and audit-remediation execution.

@@ -20,6 +20,10 @@ const requiredDownloads = [
   '../public/downloads/DoD_FM_AI_Integration_Strategy_Paper.pdf',
   '../public/downloads/General_AI_Integration_and_Adoption_Strategy_Paper.docx',
   '../public/downloads/General_AI_Integration_and_Adoption_Strategy_Paper.pdf',
+  '../public/downloads/AI_Practical_Adoption_Guidance_and_Best_Practices_Paper.docx',
+  '../public/downloads/AI_Practical_Adoption_Guidance_and_Best_Practices_Paper.pdf',
+  '../public/downloads/Advana_FM_AI_Integration_Architecture_Blueprint_Paper.docx',
+  '../public/downloads/Advana_FM_AI_Integration_Architecture_Blueprint_Paper.pdf',
   '../app/favicon.ico',
   '../app/apple-icon.png',
   '../public/favicon.png',
@@ -41,8 +45,8 @@ if (data.length !== 1891) {
   console.error('Expected 1,891 rows from both workbooks.');
   process.exit(1);
 }
-if ((papersData.papers?.length || 0) < 2) {
-  console.error('Expected at least two indexed papers.');
+if ((papersData.papers?.length || 0) < 4) {
+  console.error('Expected at least four indexed papers.');
   process.exit(1);
 }
 if (paperChunks < 2) {
