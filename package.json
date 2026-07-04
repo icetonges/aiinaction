@@ -1,0 +1,23 @@
+{
+  "name": "dod-fm-ai-use-case-library",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "init:neon": "node scripts/init-neon.mjs",
+    "load:neon": "node scripts/load-neon.mjs",
+    "check:data": "node scripts/check-data.mjs"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "latest",
+    "@neondatabase/serverless": "latest",
+    "ai": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {}
+}
