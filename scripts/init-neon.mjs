@@ -45,6 +45,9 @@ CREATE TABLE IF NOT EXISTS ai_use_cases (
 await sql`
 CREATE TABLE IF NOT EXISTS ai_strategy_chunks (
   id TEXT PRIMARY KEY,
+  paper_id TEXT,
+  paper_title TEXT,
+  document_type TEXT,
   title TEXT,
   section TEXT,
   text TEXT,
@@ -55,9 +58,13 @@ CREATE TABLE IF NOT EXISTS ai_strategy_chunks (
   embedding vector(1536)
 );
 `;
+await sql`ALTER TABLE ai_strategy_chunks ADD COLUMN IF NOT EXISTS paper_id TEXT;`;
+await sql`ALTER TABLE ai_strategy_chunks ADD COLUMN IF NOT EXISTS paper_title TEXT;`;
+await sql`ALTER TABLE ai_strategy_chunks ADD COLUMN IF NOT EXISTS document_type TEXT;`;
 await sql`CREATE INDEX IF NOT EXISTS ai_use_cases_embedding_hnsw ON ai_use_cases USING hnsw (embedding vector_cosine_ops);`;
 await sql`CREATE INDEX IF NOT EXISTS ai_use_cases_mission_idx ON ai_use_cases (mission_area);`;
 await sql`CREATE INDEX IF NOT EXISTS ai_use_cases_workbook_idx ON ai_use_cases (workbook);`;
 await sql`CREATE INDEX IF NOT EXISTS ai_strategy_chunks_embedding_hnsw ON ai_strategy_chunks USING hnsw (embedding vector_cosine_ops);`;
 await sql`CREATE INDEX IF NOT EXISTS ai_strategy_chunks_section_idx ON ai_strategy_chunks (section);`;
-console.log('Neon schema initialized for use cases and strategy paper chunks.');
+await sql`CREATE INDEX IF NOT EXISTS ai_strategy_chunks_paper_idx ON ai_strategy_chunks (paper_id);`;
+console.log('Neon schema initialized for use cases and indexed AI paper chunks.');

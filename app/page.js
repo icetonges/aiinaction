@@ -92,28 +92,39 @@ function Select({ label, value, onChange, options }) {
   );
 }
 
-function StrategySection({ strategy }) {
-  if (!strategy) return null;
-  const highlights = strategy.highlights || [];
+function PapersSection({ papersData }) {
+  const papers = papersData?.papers || [];
+  if (!papers.length) return null;
   return (
-    <section className="strategy-section" id="strategy-paper">
-      <div className="strategy-main">
-        <p className="eyebrow">Strategy paper</p>
-        <h2>{strategy.title}</h2>
-        <p className="strategy-subtitle">{strategy.subtitle}</p>
-        <p className="muted">{strategy.summary}</p>
-        <div className="hero-actions compact-actions">
-          <a href={strategy.downloads?.docx}>Download Word paper</a>
-          <a href={strategy.downloads?.pdf}>Download PDF paper</a>
-          <a href="#rag">Ask the strategy with RAG</a>
+    <section className="papers-section" id="papers">
+      <div className="section-title-row">
+        <div>
+          <p className="eyebrow">Strategy and adoption papers</p>
+          <h2>Download and search the papers</h2>
         </div>
+        <p className="muted">Both papers are indexed for deterministic search and optional Neon/pgvector RAG retrieval.</p>
       </div>
-      <div className="strategy-grid">
-        {highlights.slice(0, 6).map((item) => (
-          <article className="strategy-card" key={item.id}>
-            <span className="id">{item.id}</span>
-            <h3>{item.title}</h3>
-            <p>{String(item.text || '').replace(/\|/g, ' ').slice(0, 260)}…</p>
+      <div className="papers-grid">
+        {papers.map((paper) => (
+          <article className="paper-card" key={paper.paperId || paper.title}>
+            <span className="id">{paper.documentType || 'Paper'}</span>
+            <h3>{paper.title}</h3>
+            <p className="strategy-subtitle">{paper.subtitle}</p>
+            <p className="muted">{paper.summary}</p>
+            <div className="hero-actions compact-actions">
+              <a href={paper.downloads?.docx}>Download Word</a>
+              <a href={paper.downloads?.pdf}>Download PDF</a>
+              <a href="#rag">Ask with RAG</a>
+            </div>
+            <div className="paper-highlights">
+              {(paper.highlights || []).slice(0, 3).map((item) => (
+                <div className="strategy-card" key={item.id}>
+                  <span className="id">{item.id}</span>
+                  <h3>{item.title}</h3>
+                  <p>{String(item.text || '').replace(/\|/g, ' ').slice(0, 240)}…</p>
+                </div>
+              ))}
+            </div>
           </article>
         ))}
       </div>
@@ -122,7 +133,7 @@ function StrategySection({ strategy }) {
 }
 
 function RagPanel() {
-  const [query, setQuery] = useState('Show high-value AI use cases and strategy actions for FIAR audit readiness, WCF audit by September 2027, and department-wide audit by December 31, 2028.');
+  const [query, setQuery] = useState('Show high-value AI use cases and adoption actions for audit readiness, data quality, governance, process redesign, and measurable business value.');
   const [loading, setLoading] = useState(false);
   const [answer, setAnswer] = useState(null);
 
@@ -141,12 +152,14 @@ function RagPanel() {
     }
   }
 
+  const paperResults = answer?.paperResults || answer?.strategyResults || [];
+
   return (
     <section className="rag-panel" id="rag">
       <div>
         <p className="eyebrow">RAG backend</p>
-        <h2>Ask the catalog and strategy paper</h2>
-        <p className="muted">Without Neon/OpenAI environment variables, this route falls back to deterministic keyword retrieval. After loading Neon embeddings, it retrieves from both the use-case catalog and the DoD FM AI Integration Strategy Paper.</p>
+        <h2>Ask the catalog and papers</h2>
+        <p className="muted">Without Neon/OpenAI environment variables, this route falls back to deterministic keyword retrieval. After loading Neon embeddings, it retrieves from the use-case catalog, the DoD FM strategy paper, and the general AI adoption paper.</p>
       </div>
       <textarea value={query} onChange={(e) => setQuery(e.target.value)} />
       <button onClick={ask} disabled={loading}>{loading ? 'Searching…' : 'Ask catalog'}</button>
@@ -161,10 +174,10 @@ function RagPanel() {
                 <span>{r.missionArea} · {r.systemAssets}</span>
               </div>
             ))}
-            {(answer.strategyResults || []).slice(0, 3).map((r) => (
+            {paperResults.slice(0, 6).map((r) => (
               <div key={r.id} className="mini-card strategy-mini-card">
                 <strong>{r.id}: {r.title}</strong>
-                <span>{String(r.text || '').slice(0, 180)}…</span>
+                <span>{r.paperTitle || r.documentType || 'Indexed paper'} · {String(r.text || '').slice(0, 170)}…</span>
               </div>
             ))}
           </div>
@@ -176,14 +189,14 @@ function RagPanel() {
 
 export default function Home() {
   const [data, setData] = useState([]);
-  const [strategy, setStrategy] = useState(null);
+  const [papersData, setPapersData] = useState(null);
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({ workbook: '', sector: '', missionArea: '', domain: '', evidenceType: '', priority: '', riskLevel: '' });
 
   useEffect(() => {
     fetch('/data/usecases.json').then((r) => r.json()).then(setData);
-    fetch('/data/strategy-paper.json').then((r) => r.json()).then(setStrategy);
+    fetch('/data/papers.json').then((r) => r.json()).then(setPapersData);
   }, []);
 
   const filtered = useMemo(() => filterRows(data, filters, query), [data, filters, query]);
@@ -195,6 +208,8 @@ export default function Home() {
   const evidenceTypes = unique(data, 'evidenceType');
   const priorities = unique(data.map((r) => ({ ...r, priority: r.priority || 'Unassigned' })), 'priority');
   const risks = unique(data.map((r) => ({ ...r, riskLevel: r.riskLevel || 'Unassigned' })), 'riskLevel');
+  const paperCount = papersData?.stats?.papers || 2;
+  const documentChunks = papersData?.stats?.chunks || 0;
 
   function updateFilter(key, value) {
     setPage(1);
@@ -207,11 +222,12 @@ export default function Home() {
         <div className="hero-content">
           <p className="eyebrow">AI use-case intelligence library</p>
           <h1>DoD FM, federal, audit, accounting, and financial-industry AI use cases</h1>
-          <p className="hero-copy">A deployable Next.js library containing every row from both Excel workbooks, the DoD FM AI Integration Strategy Paper, searchable cards, source links, and a Neon/pgvector RAG backend path.</p>
+          <p className="hero-copy">A deployable Next.js library containing every row from both Excel workbooks, the DoD FM AI Integration Strategy Paper, the General AI Integration and Adoption Strategy Paper, searchable cards, source links, and a Neon/pgvector RAG backend path.</p>
           <div className="hero-actions">
             <a href="/downloads/dod_fm_ai_use_case_catalog.xlsx">Download DoD FM workbook</a>
             <a href="/downloads/ai_use_case_catalog_federal_audit_finance.xlsx">Download broad catalog workbook</a>
-            <a href="/downloads/DoD_FM_AI_Integration_Strategy_Paper.docx">Download strategy paper</a>
+            <a href="/downloads/DoD_FM_AI_Integration_Strategy_Paper.docx">DoD strategy paper</a>
+            <a href="/downloads/General_AI_Integration_and_Adoption_Strategy_Paper.docx">General AI adoption paper</a>
             <a href="#rag">Ask with RAG</a>
           </div>
         </div>
@@ -219,11 +235,11 @@ export default function Home() {
           <StatCard label="Total use cases" value={data.length || '1,891'} hint="Loaded from both workbooks" />
           <StatCard label="DoD FM use cases" value={dodCount || '1,341'} hint="Financial-management mission areas" />
           <StatCard label="Federal / audit / finance" value={broadCount || '550'} hint="Cross-sector source catalog" />
-          <StatCard label="Strategy chunks" value={strategy?.stats?.chunks || '25'} hint="Indexed for RAG search" />
+          <StatCard label="Indexed papers" value={paperCount} hint={`${documentChunks || '50+'} document chunks for search/RAG`} />
         </div>
       </section>
 
-      <StrategySection strategy={strategy} />
+      <PapersSection papersData={papersData} />
 
       <section className="search-shell">
         <div className="search-header">
@@ -255,7 +271,7 @@ export default function Home() {
       <RagPanel />
 
       <footer>
-        <strong>Evidence note:</strong> the DoD FM workbook is a public-source-derived opportunity catalog, not an official complete list of deployed DoD AI systems. Keep the Evidence Type and Source Basis fields visible when briefing leadership. The strategy paper is included as a recommended integration strategy to connect selected use cases to audit outcomes.
+        <strong>Evidence note:</strong> the DoD FM workbook is a public-source-derived opportunity catalog, not an official complete list of deployed DoD AI systems. Keep the Evidence Type and Source Basis fields visible when briefing leadership. The papers are included as recommended strategy and adoption guidance to connect selected use cases to business outcomes, data readiness, governance, and audit-readiness value.
       </footer>
     </main>
   );

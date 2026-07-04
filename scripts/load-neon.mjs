@@ -5,7 +5,7 @@ import { neon } from '@neondatabase/serverless';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const data = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/data/usecases.json'), 'utf8'));
-const strategyPaper = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/data/strategy-paper.json'), 'utf8'));
+const papersData = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/data/papers.json'), 'utf8'));
 
 function toEmbeddingText(item) {
   return [
@@ -26,10 +26,24 @@ function toEmbeddingText(item) {
   ].filter(Boolean).join('\n');
 }
 
-function toStrategyEmbeddingText(chunk) {
+function allPaperChunks() {
+  return (papersData.papers || []).flatMap((paper) =>
+    (paper.chunks || []).map((chunk) => ({
+      ...chunk,
+      paperId: chunk.paperId || paper.paperId,
+      paperTitle: chunk.paperTitle || paper.title,
+      documentType: chunk.documentType || paper.documentType,
+      downloadDocx: chunk.downloadDocx || paper.downloads?.docx,
+      downloadPdf: chunk.downloadPdf || paper.downloads?.pdf,
+    }))
+  );
+}
+
+function toPaperEmbeddingText(chunk) {
   return [
     `ID: ${chunk.id}`,
-    `Document: DoD FM AI Integration Strategy Paper`,
+    `Document: ${chunk.paperTitle}`,
+    `Document type: ${chunk.documentType}`,
     `Section: ${chunk.section || chunk.title}`,
     `Text: ${chunk.text}`,
   ].filter(Boolean).join('\n');
@@ -118,21 +132,24 @@ for (let i = 0; i < data.length; i += BATCH) {
   console.log(`Loaded use cases ${Math.min(i + BATCH, data.length)} / ${data.length}`);
 }
 
-const chunks = strategyPaper.chunks || [];
+const chunks = allPaperChunks();
 for (let i = 0; i < chunks.length; i += BATCH) {
   const rows = chunks.slice(i, i + BATCH);
-  const texts = rows.map(toStrategyEmbeddingText);
+  const texts = rows.map(toPaperEmbeddingText);
   const embeddings = await embedBatch(texts);
   for (let j = 0; j < rows.length; j++) {
     const r = rows[j];
     const vector = `[${embeddings[j].join(',')}]`;
     await sql`
       INSERT INTO ai_strategy_chunks (
-        id, title, section, text, download_docx, download_pdf, text_for_embedding, metadata, embedding
+        id, paper_id, paper_title, document_type, title, section, text, download_docx, download_pdf, text_for_embedding, metadata, embedding
       ) VALUES (
-        ${r.id}, ${r.title}, ${r.section}, ${r.text}, ${r.downloadDocx}, ${r.downloadPdf}, ${texts[j]}, ${JSON.stringify({ sectionId: r.sectionId })}::jsonb, ${vector}::vector
+        ${r.id}, ${r.paperId}, ${r.paperTitle}, ${r.documentType}, ${r.title}, ${r.section}, ${r.text}, ${r.downloadDocx}, ${r.downloadPdf}, ${texts[j]}, ${JSON.stringify({ sectionId: r.sectionId, source: r.source })}::jsonb, ${vector}::vector
       )
       ON CONFLICT (id) DO UPDATE SET
+        paper_id = EXCLUDED.paper_id,
+        paper_title = EXCLUDED.paper_title,
+        document_type = EXCLUDED.document_type,
         title = EXCLUDED.title,
         section = EXCLUDED.section,
         text = EXCLUDED.text,
@@ -143,7 +160,7 @@ for (let i = 0; i < chunks.length; i += BATCH) {
         embedding = EXCLUDED.embedding;
     `;
   }
-  console.log(`Loaded strategy chunks ${Math.min(i + BATCH, chunks.length)} / ${chunks.length}`);
+  console.log(`Loaded paper chunks ${Math.min(i + BATCH, chunks.length)} / ${chunks.length}`);
 }
 
-console.log('All use cases and strategy paper chunks loaded into Neon.');
+console.log('All use cases and indexed paper chunks loaded into Neon.');

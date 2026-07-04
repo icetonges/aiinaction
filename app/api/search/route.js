@@ -1,4 +1,4 @@
-import { searchCatalog, searchStrategyPaper } from '@/lib/catalog';
+import { searchCatalog, searchPapers } from '@/lib/catalog';
 
 export async function POST(request) {
   const body = await request.json().catch(() => ({}));
@@ -7,15 +7,16 @@ export async function POST(request) {
     filters: body.filters || {},
     limit: body.limit || 100,
   });
-  const strategyResults = searchStrategyPaper({
+  const paperResults = searchPapers({
     query: body.query || '',
-    limit: body.documentLimit || 8,
+    limit: body.documentLimit || 12,
   });
   return Response.json({
     count: catalogResults.length,
-    documentCount: strategyResults.length,
+    documentCount: paperResults.length,
     results: catalogResults,
-    strategyResults,
+    paperResults,
+    strategyResults: paperResults,
   });
 }
 
@@ -23,11 +24,12 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('q') || '';
   const catalogResults = searchCatalog({ query, limit: Number(searchParams.get('limit') || 50) });
-  const strategyResults = searchStrategyPaper({ query, limit: Number(searchParams.get('documentLimit') || 8) });
+  const paperResults = searchPapers({ query, limit: Number(searchParams.get('documentLimit') || 12) });
   return Response.json({
     count: catalogResults.length,
-    documentCount: strategyResults.length,
+    documentCount: paperResults.length,
     results: catalogResults,
-    strategyResults,
+    paperResults,
+    strategyResults: paperResults,
   });
 }

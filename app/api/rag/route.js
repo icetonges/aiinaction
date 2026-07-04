@@ -1,7 +1,7 @@
 import { generateText, embed } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { neon } from '@neondatabase/serverless';
-import { searchCatalog, searchStrategyPaper } from '@/lib/catalog';
+import { searchCatalog, searchPapers } from '@/lib/catalog';
 
 const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
 const CHAT_MODEL = process.env.CHAT_MODEL || 'gpt-4o-mini';
@@ -21,9 +21,12 @@ function compact(row) {
   };
 }
 
-function compactStrategy(chunk) {
+function compactPaper(chunk) {
   return {
     id: chunk.id,
+    paperId: chunk.paperId,
+    paperTitle: chunk.paperTitle,
+    documentType: chunk.documentType,
     title: chunk.title,
     section: chunk.section,
     text: String(chunk.text || '').slice(0, 900),
@@ -34,8 +37,8 @@ function compactStrategy(chunk) {
 
 function fallback(query, filters = {}) {
   const results = searchCatalog({ query, filters, limit: 12 }).map(compact);
-  const strategyResults = searchStrategyPaper({ query, limit: 8 }).map(compactStrategy);
-  return { results, strategyResults };
+  const paperResults = searchPapers({ query, limit: 12 }).map(compactPaper);
+  return { results, paperResults, strategyResults: paperResults };
 }
 
 export async function POST(request) {
@@ -45,11 +48,12 @@ export async function POST(request) {
 
   const canUseRag = Boolean(process.env.DATABASE_URL && process.env.OPENAI_API_KEY);
   if (!canUseRag) {
-    const { results, strategyResults } = fallback(query, body.filters || {});
+    const { results, paperResults, strategyResults } = fallback(query, body.filters || {});
     return Response.json({
       mode: 'keyword-fallback',
-      answer: 'Neon/OpenAI environment variables are not configured, so the API returned deterministic matches from the use-case catalog and the DoD FM AI strategy paper instead of vector RAG.',
+      answer: 'Neon/OpenAI environment variables are not configured, so the API returned deterministic matches from the use-case catalog and the indexed papers instead of vector RAG.',
       results,
+      paperResults,
       strategyResults,
     });
   }
@@ -68,57 +72,65 @@ export async function POST(request) {
       LIMIT 12;
     `;
 
-    let strategyRows = [];
+    let paperRows = [];
     try {
-      strategyRows = await sql`
-        SELECT id, title, section, text, download_docx, download_pdf,
+      paperRows = await sql`
+        SELECT id, paper_id, paper_title, document_type, title, section, text, download_docx, download_pdf,
                1 - (embedding <=> ${vector}::vector) AS similarity
         FROM ai_strategy_chunks
         ORDER BY embedding <=> ${vector}::vector
-        LIMIT 8;
+        LIMIT 12;
       `;
     } catch {
-      strategyRows = [];
+      paperRows = [];
     }
 
     const catalogContext = rows.map((r, i) => `${i + 1}. ${r.id} — ${r.use_case_name}\nMission: ${r.mission_area}\nSystem/assets: ${r.system_assets}\nDescription: ${r.description}\nPattern: ${r.ai_pattern}\nBenefit: ${r.expected_benefit}\nEvidence: ${r.evidence_type}\nSource: ${r.source_url}`).join('\n\n');
 
-    const strategyContext = strategyRows.map((r, i) => `${i + 1}. ${r.id} — ${r.title}\nSection: ${r.section}\nText: ${String(r.text || '').slice(0, 2200)}`).join('\n\n');
+    const paperContext = paperRows.map((r, i) => `${i + 1}. ${r.id} — ${r.title}\nDocument: ${r.paper_title || r.document_type}\nSection: ${r.section}\nText: ${String(r.text || '').slice(0, 2200)}`).join('\n\n');
 
     const { text } = await generateText({
       model: openai(CHAT_MODEL),
-      system: 'You answer questions using only the provided AI use-case catalog and DoD FM AI integration strategy paper context. Be precise. Say when a row is a candidate/opportunity rather than a confirmed deployed system. Connect recommendations to audit outcomes when the strategy paper provides that context.',
-      prompt: `Question: ${query}\n\nCatalog context:\n${catalogContext}\n\nStrategy paper context:\n${strategyContext}\n\nAnswer with 5-10 bullet points. Cite catalog row IDs and/or strategy chunk IDs in parentheses.`,
+      system: 'You answer questions using only the provided AI use-case catalog and indexed AI strategy/adoption paper context. Be precise. Say when a row is a candidate/opportunity rather than a confirmed deployed system. Connect recommendations to data readiness, process redesign, governance, controls, business value, and audit outcomes when the context supports it.',
+      prompt: `Question: ${query}\n\nCatalog context:\n${catalogContext}\n\nPaper context:\n${paperContext}\n\nAnswer with 5-10 bullet points. Cite catalog row IDs and/or paper chunk IDs in parentheses.`,
     });
+
+    const results = rows.map((r) => ({
+      id: r.id,
+      useCaseName: r.use_case_name,
+      missionArea: r.mission_area,
+      domain: r.domain,
+      systemAssets: r.system_assets,
+      description: r.description,
+      aiPattern: r.ai_pattern,
+      expectedBenefit: r.expected_benefit,
+      evidenceType: r.evidence_type,
+      sourceUrl: r.source_url,
+      similarity: Number(r.similarity),
+    }));
+
+    const paperResults = paperRows.map((r) => ({
+      id: r.id,
+      paperId: r.paper_id,
+      paperTitle: r.paper_title,
+      documentType: r.document_type,
+      title: r.title,
+      section: r.section,
+      text: String(r.text || '').slice(0, 900),
+      downloadDocx: r.download_docx,
+      downloadPdf: r.download_pdf,
+      similarity: Number(r.similarity),
+    }));
 
     return Response.json({
       mode: 'neon-pgvector-rag',
       answer: text,
-      results: rows.map((r) => ({
-        id: r.id,
-        useCaseName: r.use_case_name,
-        missionArea: r.mission_area,
-        domain: r.domain,
-        systemAssets: r.system_assets,
-        description: r.description,
-        aiPattern: r.ai_pattern,
-        expectedBenefit: r.expected_benefit,
-        evidenceType: r.evidence_type,
-        sourceUrl: r.source_url,
-        similarity: Number(r.similarity),
-      })),
-      strategyResults: strategyRows.map((r) => ({
-        id: r.id,
-        title: r.title,
-        section: r.section,
-        text: String(r.text || '').slice(0, 900),
-        downloadDocx: r.download_docx,
-        downloadPdf: r.download_pdf,
-        similarity: Number(r.similarity),
-      })),
+      results,
+      paperResults,
+      strategyResults: paperResults,
     });
   } catch (error) {
-    const { results, strategyResults } = fallback(query, body.filters || {});
-    return Response.json({ mode: 'rag-error-keyword-fallback', error: error.message, results, strategyResults }, { status: 200 });
+    const { results, paperResults, strategyResults } = fallback(query, body.filters || {});
+    return Response.json({ mode: 'rag-error-keyword-fallback', error: error.message, results, paperResults, strategyResults }, { status: 200 });
   }
 }
