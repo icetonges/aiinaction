@@ -1,15 +1,17 @@
 # DoD FM AI Use Case Library
 
-This is a deployable **Next.js + CSS + JavaScript** website containing every use-case row from both Excel workbooks, plus four downloadable and RAG-searchable papers:
+This is a deployable **Next.js + CSS + JavaScript** website containing every use-case row from five Excel workbooks, plus four downloadable and RAG-searchable papers:
 
 1. **DoD FM AI Integration Strategy Paper**
 2. **General AI Integration and Adoption Strategy Paper**
 
 ## Included content
 
-- `dod_fm_ai_use_case_catalog.xlsx` — **1,341** DoD Financial Management use cases
+- `dod_fm_ai_use_case_catalog.xlsx` — **1,381** DoD Financial Management use cases (v2.1 full scoreable portfolio; replaces the prior 1,341-row catalog)
 - `ai_use_case_catalog_federal_audit_finance.xlsx` — **550** federal, audit, accounting, and financial-industry use cases
-- Combined site data: **1,891** use-case rows
+- `omb_2025_individually_reported_ai_use_cases.xlsx` — **3,611** individually reported use cases from the 2025 OMB government-wide AI use-case inventory
+- `omb_2025_consolidated_cots_ai_use_cases.xlsx` — **900** consolidated COTS/common-use AI pattern rows reported across agencies
+- Combined site data: **6,442** use-case rows
 - `DoD_FM_AI_Integration_Strategy_Paper.docx` and `.pdf` — added to `/public/downloads`
 - `General_AI_Integration_and_Adoption_Strategy_Paper.docx` and `.pdf` — added to `/public/downloads`
 - `AI_Practical_Adoption_Guidance_and_Best_Practices_Paper.docx` and `.pdf` — added to `/public/downloads`
@@ -95,9 +97,15 @@ The General AI Integration and Adoption Strategy Paper is a companion paper. It 
 npm run check:data
 ```
 
-Expected output includes total row count of **1,891**, at least **4** indexed papers, no missing downloadable files, and no missing favicon/icon assets.
+Expected output includes total row count of **6,442**, at least **4** indexed papers, no missing downloadable files, and no missing favicon/icon assets.
 
 
 ## Added Advana-FM architecture and practical adoption guidance
 
 This update adds the AI Practical Adoption Guidance and Best Practices Paper and the Advana-FM AI Integration Architecture Blueprint Paper. The Advana-FM paper reinforces the operating concept that Advana-FM is the technical accelerator for the audit goal and AI is a governed layer within Advana-FM for reconciliation, evidence generation, anomaly detection, control validation, and audit-remediation execution.
+
+## DoD FM v2.1 catalog replacement and OMB 2025 inventory insert
+
+- Replaced the DoD FM AI Use Case Catalog data and workbook with the **v2.1 full scoreable portfolio** (1,381 rows), which restores 462 previously-removed candidate rows as scoreable items and adds 40 new audit-priority use cases, each with scoring columns (Portfolio Tier, Portfolio Lane, Weighted Portfolio Score, V2 Priority/Status) preserved in each row's `original` data and surfaced as `portfolioTier`, `portfolioLane`, and `catalogVersion` fields.
+- Inserted the **OMB 2025 individually reported AI use cases** (3,611 rows across 41 agencies) and the **OMB 2025 consolidated COTS/common-use AI patterns** (900 rows, including both reported use and non-use) as two new workbooks in the site data, each downloadable from the homepage.
+- Site total grew from 1,891 to **6,442** use-case rows across five workbooks.

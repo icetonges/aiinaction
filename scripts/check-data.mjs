@@ -16,6 +16,8 @@ const paperChunks = (papersData.papers || []).reduce((sum, paper) => sum + (pape
 const requiredDownloads = [
   '../public/downloads/dod_fm_ai_use_case_catalog.xlsx',
   '../public/downloads/ai_use_case_catalog_federal_audit_finance.xlsx',
+  '../public/downloads/omb_2025_individually_reported_ai_use_cases.xlsx',
+  '../public/downloads/omb_2025_consolidated_cots_ai_use_cases.xlsx',
   '../public/downloads/DoD_FM_AI_Integration_Strategy_Paper.docx',
   '../public/downloads/DoD_FM_AI_Integration_Strategy_Paper.pdf',
   '../public/downloads/General_AI_Integration_and_Adoption_Strategy_Paper.docx',
@@ -41,8 +43,8 @@ console.log({
   missingDownloads,
 });
 
-if (data.length !== 1891) {
-  console.error('Expected 1,891 rows from both workbooks.');
+if (data.length !== 6442) {
+  console.error('Expected 6,442 rows from all five workbooks.');
   process.exit(1);
 }
 if ((papersData.papers?.length || 0) < 4) {
