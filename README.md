@@ -19,11 +19,23 @@ This is a deployable **Next.js + CSS + JavaScript** website containing every use
 - `papers.json` — four papers indexed for deterministic search and optional Neon/pgvector RAG retrieval
 - Custom favicon and app icon assets in `app/favicon.ico`, `app/apple-icon.png`, `public/favicon.png`, and `public/favicon.svg`
 
+## Site structure
+
+The site is a multi-page Next.js App Router app, not a single scrolling page:
+
+- `/` — Home/index: search, quick stats, workbook category tiles, auto-curated featured use cases, papers spotlight.
+- `/browse` — server-rendered faceted search over all 6,442 rows (filters are plain links driven by the URL query string).
+- `/catalog/[id]` — one statically generated detail page per use case, with the full field set, source link, and related use cases.
+- `/papers` — dedicated hub for the four strategy/adoption papers plus the RAG "ask" panel.
+- `/insights` — a data-shape dashboard (breakdowns by workbook, priority, risk, evidence type, sector, mission area).
+
+See `docs/adr/0001-site-information-architecture-redesign.md` for the rationale behind this structure and the trade-offs considered.
+
 The app includes:
 
-1. A searchable/filterable catalog UI.
-2. A paper section with Word/PDF downloads for both papers.
-3. Source links preserved on each use-case card.
+1. A searchable/filterable catalog UI, server-rendered so the client never downloads the full dataset.
+2. A paper hub with Word/PDF downloads for all four papers.
+3. Source links preserved on every use-case card and detail page.
 4. Original Excel workbooks copied into `/public/downloads`.
 5. `/api/search` deterministic keyword search across the catalog and indexed papers.
 6. `/api/rag` RAG endpoint with Neon + pgvector + AI SDK, with keyword fallback when environment variables are missing.

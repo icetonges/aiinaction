@@ -1,8 +1,13 @@
 import './styles.css';
+import SiteHeader from '@/components/SiteHeader';
+import SiteFooter from '@/components/SiteFooter';
 
 export const metadata = {
-  title: 'AI Use Case Library for DoD FM, Audit, and Finance',
-  description: 'Searchable AI use-case catalog and AI integration strategy papers built from federal, audit, finance, and DoD FM workbooks.',
+  title: {
+    default: 'AI Use Case Library for DoD FM, Audit, and Finance',
+    template: '%s | AI Use Case Library',
+  },
+  description: 'Searchable AI use-case catalog and AI integration strategy papers built from DoD FM, federal, audit, finance, and OMB 2025 government-wide AI workbooks.',
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
@@ -13,7 +18,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <SiteHeader />
+        {children}
+        <SiteFooter />
+      </body>
     </html>
   );
 }
