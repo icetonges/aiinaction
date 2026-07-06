@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from 'next/navigation';
+import ThemeToggle from './ThemeToggle';
 
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
@@ -34,6 +35,7 @@ export default function SiteHeader() {
           <input type="text" name="q" placeholder="Search use cases…" aria-label="Search use cases" />
           <button type="submit">Search</button>
         </form>
+        <ThemeToggle />
       </div>
     </header>
   );
