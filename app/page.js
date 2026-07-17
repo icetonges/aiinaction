@@ -37,7 +37,7 @@ export default function Home() {
             </div>
             <div className="stat-cell">
               <div className="stat-value">{(byWorkbook['DoD FM AI Use Case Catalog'] || 0).toLocaleString()}</div>
-              <div className="stat-label">DoD FM (v2.1)</div>
+              <div className="stat-label">Recommended cases for defense audit</div>
               <div className="stat-hint">Audit-priority portfolio</div>
             </div>
             <div className="stat-cell">
