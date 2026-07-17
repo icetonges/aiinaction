@@ -1,7 +1,7 @@
 import { generateText, embed } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { neon } from '@neondatabase/serverless';
-import { searchCatalog, searchPapers } from '@/lib/catalog';
+import { cachedSearchCatalog, cachedSearchPapers } from '@/lib/catalog';
 
 const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
 const CHAT_MODEL = process.env.CHAT_MODEL || 'gpt-4o-mini';
@@ -35,9 +35,9 @@ function compactPaper(chunk) {
   };
 }
 
-function fallback(query, filters = {}) {
-  const results = searchCatalog({ query, filters, limit: 12 }).map(compact);
-  const paperResults = searchPapers({ query, limit: 12 }).map(compactPaper);
+async function fallback(query, filters = {}) {
+  const results = (await cachedSearchCatalog({ query, filters, limit: 12 })).map(compact);
+  const paperResults = (await cachedSearchPapers({ query, limit: 12 })).map(compactPaper);
   return { results, paperResults, strategyResults: paperResults };
 }
 
@@ -48,7 +48,7 @@ export async function POST(request) {
 
   const canUseRag = Boolean(process.env.DATABASE_URL && process.env.OPENAI_API_KEY);
   if (!canUseRag) {
-    const { results, paperResults, strategyResults } = fallback(query, body.filters || {});
+    const { results, paperResults, strategyResults } = await fallback(query, body.filters || {});
     return Response.json({
       mode: 'keyword-fallback',
       answer: 'Neon/OpenAI environment variables are not configured, so the API returned deterministic matches from the use-case catalog and the indexed papers instead of vector RAG.',
@@ -130,7 +130,7 @@ export async function POST(request) {
       strategyResults: paperResults,
     });
   } catch (error) {
-    const { results, paperResults, strategyResults } = fallback(query, body.filters || {});
+    const { results, paperResults, strategyResults } = await fallback(query, body.filters || {});
     return Response.json({ mode: 'rag-error-keyword-fallback', error: error.message, results, paperResults, strategyResults }, { status: 200 });
   }
 }

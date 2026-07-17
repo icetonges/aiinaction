@@ -6,6 +6,11 @@ import { neon } from '@neondatabase/serverless';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const data = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/data/usecases.json'), 'utf8'));
 const papersData = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/data/papers.json'), 'utf8'));
+// Raw source-spreadsheet rows live outside public/data so they aren't bundled into
+// every Next.js function that imports lib/catalog.js (see public/data/usecases.json,
+// which no longer carries an `original` field per row). Only this load script needs it.
+const originalsPath = path.join(__dirname, '../data/usecases-original.json');
+const originals = fs.existsSync(originalsPath) ? JSON.parse(fs.readFileSync(originalsPath, 'utf8')) : {};
 
 function toEmbeddingText(item) {
   return [
@@ -94,7 +99,7 @@ for (let i = 0; i < data.length; i += BATCH) {
         ${r.systemAssets}, ${r.useCaseName}, ${r.description}, ${r.aiPattern}, ${r.automationLevel}, ${r.expectedBenefit},
         ${r.auditImpact}, ${r.sourceBasis}, ${r.sourceUrl}, ${r.sourceName}, ${r.evidenceType}, ${r.riskLevel}, ${r.controls},
         ${r.dataNeeded}, ${r.metrics}, ${r.priority}, ${r.complexity}, ${r.mvpScope}, ${r.controlObjective}, ${texts[j]},
-        ${JSON.stringify(r.original || {})}::jsonb, ${vector}::vector
+        ${JSON.stringify(originals[r.id] || {})}::jsonb, ${vector}::vector
       )
       ON CONFLICT (id) DO UPDATE SET
         workbook = EXCLUDED.workbook,

@@ -1,5 +1,5 @@
 import UseCaseCard from '@/components/UseCaseCard';
-import { queryCatalog } from '@/lib/catalog';
+import { cachedQueryCatalog } from '@/lib/catalog';
 
 export const metadata = { title: 'Browse the catalog' };
 
@@ -50,7 +50,7 @@ export default async function BrowsePage({ searchParams }) {
   const page = Math.max(1, parseInt(toSingle(sp.page) || '1', 10) || 1);
   const offset = (page - 1) * PAGE_SIZE;
 
-  const { items, total, facets } = queryCatalog({ query, filters, limit: PAGE_SIZE, offset });
+  const { items, total, facets } = await cachedQueryCatalog({ query, filters, limit: PAGE_SIZE, offset });
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const activeFilterEntries = Object.entries(filters).filter(([, value]) => value);
   const hasActive = Boolean(query) || activeFilterEntries.length > 0;
