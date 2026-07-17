@@ -1,7 +1,16 @@
 import UseCaseCard from '@/components/UseCaseCard';
 import { cachedQueryCatalog } from '@/lib/catalog';
 
-export const metadata = { title: 'Browse the catalog' };
+// Filtered/paginated views are marked noindex so search engines don't queue up
+// the facet-combination URL space; only plain /browse is indexable.
+export async function generateMetadata({ searchParams }) {
+  const sp = (await searchParams) || {};
+  const filtered = Object.values(sp).some((value) => (Array.isArray(value) ? value[0] : value));
+  return {
+    title: 'Browse the catalog',
+    robots: filtered ? { index: false, follow: false } : undefined,
+  };
+}
 
 const PAGE_SIZE = 24;
 
@@ -84,7 +93,7 @@ export default async function BrowsePage({ searchParams }) {
                     const href = buildQuery(sp, { [key]: active ? '' : value });
                     return (
                       <div className="facet-option" data-active={active} key={value}>
-                        <a href={href}>{value}</a>
+                        <a href={href} rel="nofollow">{value}</a>
                         <span className="count">{count.toLocaleString()}</span>
                       </div>
                     );
@@ -133,9 +142,9 @@ export default async function BrowsePage({ searchParams }) {
 
           {totalPages > 1 ? (
             <div className="pagination">
-              {page > 1 ? <a href={buildQuery(sp, { page: page - 1 })}>← Previous</a> : null}
+              {page > 1 ? <a href={buildQuery(sp, { page: page - 1 })} rel="nofollow">← Previous</a> : null}
               <span className="current">Page {page} of {totalPages}</span>
-              {page < totalPages ? <a href={buildQuery(sp, { page: page + 1 })}>Next →</a> : null}
+              {page < totalPages ? <a href={buildQuery(sp, { page: page + 1 })} rel="nofollow">Next →</a> : null}
             </div>
           ) : null}
         </div>
