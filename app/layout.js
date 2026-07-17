@@ -4,10 +4,10 @@ import SiteFooter from '@/components/SiteFooter';
 
 export const metadata = {
   title: {
-    default: 'AI Use Case Library for DoD FM, Audit, and Finance',
+    default: 'AI Use Case Library for Defense, Audit, and Finance',
     template: '%s | AI Use Case Library',
   },
-  description: 'Searchable AI use-case catalog and AI integration strategy papers built from DoD FM, federal, audit, finance, and OMB 2025 government-wide AI workbooks.',
+  description: 'Searchable AI use-case catalog and AI integration strategy papers built from defense, federal, audit, finance, and OMB 2025 government-wide AI workbooks.',
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',

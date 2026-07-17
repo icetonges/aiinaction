@@ -13,9 +13,9 @@ export default function Home() {
       <section className="hero">
         <div className="shell">
           <p className="hero-eyebrow">AI use-case intelligence library</p>
-          <h1>Find, compare, and act on 6,400+ federal and DoD financial-management AI use cases</h1>
+          <h1>Find, compare, and act on 6,400+ federal and defense audit AI use cases</h1>
           <p className="hero-copy">
-            One index across five source workbooks — the DoD FM AI Use Case Catalog v2.1, the Federal/Audit/Finance
+            One index across five source workbooks — the recommended cases for defense audit, the Federal/Audit/Finance
             catalog, and both 2025 OMB government-wide AI inventories — plus strategy and adoption papers. Search by
             keyword, browse by catalog or mission area, or open a use case to see its full evidence trail.
           </p>
@@ -136,8 +136,8 @@ export default function Home() {
       <section className="section">
         <div className="shell">
           <div className="evidence-banner">
-            <strong>Evidence note:</strong> the DoD FM workbook (v2.1) is a public-source-derived opportunity catalog, not
-            an official complete list of deployed DoD AI systems. The OMB individually reported and consolidated COTS
+            <strong>Evidence note:</strong> the defense audit workbook is a public-source-derived opportunity catalog, not
+            an official complete list of deployed defense AI systems. The OMB individually reported and consolidated COTS
             datasets are exact rows from the 2025 government-wide OMB AI use-case inventories and reflect agency
             self-reporting. Check each use case's Evidence Type and Source Basis before briefing leadership — see the
             {' '}<a href="/insights">insights dashboard</a> for a full breakdown by evidence type, priority, and risk.

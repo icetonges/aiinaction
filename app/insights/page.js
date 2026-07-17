@@ -77,13 +77,13 @@ export default function InsightsPage() {
             />
             <BarPanel
               title="By priority"
-              hint="DoD FM v2.1 priority; other catalogs are mostly unassigned/opportunity rows."
+              hint="Defense audit priority; other catalogs are mostly unassigned/opportunity rows."
               entries={byPriority}
               total={total}
             />
             <BarPanel
               title="By risk level"
-              hint="Assigned mainly on DoD FM (v2.1) and OMB high-impact determinations."
+              hint="Assigned mainly on the defense audit catalog and OMB high-impact determinations."
               entries={byRisk}
               total={total}
             />
@@ -110,9 +110,9 @@ export default function InsightsPage() {
       <section className="section">
         <div className="shell">
           <div className="evidence-banner">
-            <strong>How to read this:</strong> Priority, risk, and portfolio-tier scoring apply most fully to the DoD FM
-            v2.1 catalog. The OMB individually reported and consolidated COTS datasets are exact inventory rows and
-            largely appear as "Unassigned" here until reviewed against DoD FM audit priorities — see each use case's
+            <strong>How to read this:</strong> Priority, risk, and portfolio-tier scoring apply most fully to the defense
+            audit catalog. The OMB individually reported and consolidated COTS datasets are exact inventory rows and
+            largely appear as "Unassigned" here until reviewed against defense audit priorities — see each use case's
             detail page for its full evidence trail.
           </div>
         </div>

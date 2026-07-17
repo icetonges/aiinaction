@@ -18,7 +18,7 @@ export default function SiteHeader() {
       <div className="site-header-inner">
         <a className="site-brand" href="/">
           <span className="site-brand-name">AI Use Case Library</span>
-          <span className="site-brand-tag">DoD FM · Federal · Audit · Finance · OMB 2025</span>
+          <span className="site-brand-tag">Defense · Federal · Audit · Finance · OMB 2025</span>
         </a>
         <nav className="site-nav" aria-label="Primary">
           {NAV_LINKS.map((link) => (
