@@ -1,4 +1,4 @@
-import { workbookMeta } from '@/lib/catalog';
+import { workbookMeta } from '@/lib/workbooks';
 import { priorityTone, riskTone, truncate } from '@/lib/ui';
 
 export default function UseCaseCard({ item }) {
